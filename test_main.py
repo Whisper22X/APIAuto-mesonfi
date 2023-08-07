@@ -20,25 +20,44 @@ class api:
         self.data = None
         self.from_index = 0
         self.to_index = 1
+        self.last_executed_pair = None  # Initialize the attribute to None
 
     def test_yaml_data(self):
+
         if self.data is None:
-            with open('rotationChain.yaml', 'r') as file:
+            with open('input.yaml', 'r') as file:
                 self.data = yaml.load(file, Loader=yaml.SafeLoader)
 
-        # Get the 'from' and 'to' elements based on the current indices
-        from_item = self.data['from'][self.from_index]
-        to_item = self.data['to'][self.to_index]
+        if len(self.data['from']) == 1 and len(self.data['to']) == 1:
+            self.data['from'], self.data['to'] = self.data['to'], self.data['from']
 
-        # Update the indices for the next pair
-        self.from_index = (self.from_index + 1) % len(self.data['from'])
-        self.to_index = (self.to_index + 1) % len(self.data['to'])
+            print(self.data['from'][0], self.data['to'][0])
+            print("这是单个交易对")
 
-        return {
-            'from_item': from_item,
-            'to_item': to_item,
-            'data': self.data
-        }
+            # If it's the first time executing, return the current trading pair
+            return {
+                'from_item': self.data['from'][0],
+                'to_item': self.data['to'][0],
+                'data': self.data
+            }
+
+        else:
+                # 对于多个对的情况，根据当前索引返回相应的对
+                from_item = self.data['from'][self.from_index]
+                to_item = self.data['to'][self.to_index]
+
+                # 更新索引以获取下一对
+                self.from_index = (self.from_index + 1) % len(self.data['from'])
+                self.to_index = (self.to_index + 1) % len(self.data['to'])
+                print("这是多个交易对")
+                print(from_item, to_item)
+                return {
+                    'from_item': from_item,
+                    'to_item': to_item,
+                    'data': self.data
+                }
+
+
 
     def list_supported_chains(self):
         # url = "https://relayer.meson.fi/api/v1/list"
@@ -54,7 +73,7 @@ class api:
         print(response.text)
 
     def test_get_price(self, data):
-
+        # print("from为："+data['from_item'])
         data_dict = data['data']
 
         # url = "https://relayer.meson.fi/api/v1/price"
@@ -99,15 +118,11 @@ class api:
         print(response)
         data = response.json()
         print(data)
-        result = data_dict['result']
-
-        print(result)
-
+        result = data['result']
         return result
 
-
-
     def test_submit_swap_signatures(self, result, data):
+
         data_dict = data['data']
         private_key = data_dict['private-key']
         # 假设第一条哈希的十六进制字符串
@@ -195,71 +210,81 @@ class api:
             if "EXECUTED" in data["result"]:
                 print(data["result"])
                 return data["result"]
-        time.sleep(3)
+
         # assert "EXECUTED" in data["result"]
         # print(data['result'])
 
-    def test_change_chain(self, swapStatus, chain):
-        time.sleep(5)
-        # print(swapStatus["EXECUTED"])
-        print(chain["from"])
-
-        # 如果 chain['from'] 的值为 "avax:usdc"，则修改 input.yaml 文件
-        if chain.get("from") == "avax:usdc":
-            with open('input.yaml', 'r') as file:
-                data = yaml.load(file, Loader=yaml.SafeLoader)
-                # 修改 from 和 to 字段的值
-                data['from'] = "polygon:usdc"
-                data['to'] = "avax:usdc"
-            # 将修改后的数据写回 input.yaml 文件
-            with open('input.yaml', 'w') as file:
-                yaml.dump(data, file, default_style='"')
-        else:
-            # 如果 chain['from'] 的值不是 "avax:usdc"，则修改 from 和 to 字段的值为对应的值
-            with open('input.yaml', 'r') as file:
-                data = yaml.load(file, Loader=yaml.SafeLoader)
-                # 修改 from 和 to 字段的值为对应的值，这里可以根据具体情况修改
-                data['from'] = "avax:usdc"
-                data['to'] = "polygon:usdc"
-            # 将修改后的数据写回 input.yaml 文件
-            with open('input.yaml', 'w') as file:
-                yaml.dump(data, file, default_style='"')
-
-
-
-
+    # def test_change_chain(self, swapStatus, chain):
+    #     time.sleep(5)
+    #     if 'from' in chain:
+    #         print(chain['from'])
+    #
+    #         # 交换 from 和 to 字段的值
+    #         chain["from"], chain["to"] = chain["to"], chain["from"]
+    #
+    #         # 如果 chain['from'] 的值为 "avax:usdc"，则修改 input.yaml 文件
+    #         if chain["from"] == "avax:usdc":
+    #             # 将修改后的数据写回 input.yaml 文件
+    #             with open('input.yaml', 'w') as file:
+    #                 yaml.dump(chain, file, default_style='"')
+    #         else:
+    #             # 如果 chain['from'] 的值不是 "avax:usdc"，则修改 from 和 to 字段的值为对应的值
+    #             # 这里可以根据具体情况修改
+    #             chain["from"] = "avax:usdc"
+    #             chain["to"] = "polygon:usdc"
+    #
+    #         # 输出修改后的 from 和 to 字段的值
+    #         print(f"New 'from' value: {chain['from']}")
+    #         print(f"New 'to' value: {chain['to']}")
+    #     else:
+    #         print("Key 'from' not found in the 'chain' dictionary.")
 
 
 if __name__ == '__main__':
+    import pytest
+
+
 
     count = 0  # 初始化计数器为 0
+
+    # while True:
+    #     Testapi = api()
+    #     data = Testapi.test_yaml_data()
+    #     print(data)
+    #     count += 1  # 每次执行测试用例后计数器加一
+    #     print(f"执行第 {count} 次测试用例")
+    #
+    #
+    #     Testapi.test_get_price(data)
+    #     time.sleep(3)
+    # pytest.main(['-vs', '-k', 'test_yaml_data'])
+    #
     Testapi = api()
     data = Testapi.test_yaml_data()
-
     num_pairs = min(len(Testapi.data['from']), len(Testapi.data['to']))
-    for _ in range(num_pairs):
-        data = Testapi.test_yaml_data()
-        count += 1  # 每次执行测试用例后计数器加一
+    while True:
+        for _ in range(num_pairs):
 
-        Testapi = api()
-        data = Testapi.test_yaml_data()
-        with allure.step(f"Executing Test Case {count}"):
+            count += 1  # 每次执行测试用例后计数器加一
             print(f"执行第 {count} 次测试用例")
-        with allure.step("Test Get Price"):
-            Testapi.test_get_price(data)
-        with allure.step("Test Encode Swap"):
-            swapInfo = Testapi.test_encode_swap(data)
-            Testapi.test_submit_swap_signatures(swapInfo, data)
-        with allure.step("Test Submit Swap Signatures"):
-            sig0, sig1, encoded = Testapi.test_submit_swap_signatures(swapInfo, data)
-        with allure.step("Test Submit Swap"):
-            swapId = Testapi.test_submit_swap(sig0, sig1, encoded, data)
-        with allure.step("Test Check Status"):
-            swapStatus = Testapi.test_check_status(swapId)
-        with allure.step("Test Change Chain"):
-            Testapi.test_change_chain(swapStatus, data)
-        print(data)
-        time.sleep(80)
+            data = Testapi.test_yaml_data()
+
+            with allure.step("Test Get Price"):
+                Testapi.test_get_price(data)
+            with allure.step("Test Encode Swap"):
+                swapInfo = Testapi.test_encode_swap(data)
+                Testapi.test_submit_swap_signatures(swapInfo, data)
+            with allure.step("Test Submit Swap Signatures"):
+                sig0, sig1, encoded = Testapi.test_submit_swap_signatures(swapInfo, data)
+            with allure.step("Test Submit Swap"):
+                swapId = Testapi.test_submit_swap(sig0, sig1, encoded, data)
+            with allure.step("Test Check Status"):
+                swapStatus = Testapi.test_check_status(swapId)
+            # with allure.step("Test Change Chain"):
+            #     Testapi.test_change_chain(swapStatus, data)
+            # subprocess.run(['pytest', '-vs'])
+
+            time.sleep(30)
     # pytest.main(['-vs', '-k', 'test_yaml_data'])
     # count = 0  # 初始化计数器为 0
     # while True:
