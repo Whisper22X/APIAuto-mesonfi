@@ -4,37 +4,32 @@
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 import requests
 import json
-
 from eth_account import Account, messages
-
 import sha3
 import yaml
-from collections import deque
 import time
+import pytest
 import allure
-import subprocess
+import os
 
-
-class api:
-    def __init__(self):
+@allure.feature("test-mesonfi-api")
+class TestApi:
+    @allure.title("get swap data")
+    def test_yaml_data(self):
         self.data = None
         self.from_index = 0
         self.to_index = 1
-        self.last_executed_pair = None  # Initialize the attribute to None
-
-    def test_yaml_data(self):
-
         if self.data is None:
-            with open('input.yaml', 'r') as file:
+            with open('single.yaml', 'r') as file:
                 self.data = yaml.load(file, Loader=yaml.SafeLoader)
-
+        # 对于单个交易对的情况，根据当前索引返回相应的对
         if len(self.data['from']) == 1 and len(self.data['to']) == 1:
             self.data['from'], self.data['to'] = self.data['to'], self.data['from']
 
             print(self.data['from'][0], self.data['to'][0])
             print("这是单个交易对")
 
-            # If it's the first time executing, return the current trading pair
+
             return {
                 'from_item': self.data['from'][0],
                 'to_item': self.data['to'][0],
@@ -51,32 +46,29 @@ class api:
                 self.to_index = (self.to_index + 1) % len(self.data['to'])
                 print("这是多个交易对")
                 print(from_item, to_item)
+
                 return {
                     'from_item': from_item,
                     'to_item': to_item,
                     'data': self.data
                 }
 
-
-
-    def list_supported_chains(self):
+    @allure.title("list supported chains")
+    def test_list_supported_chains(self):
         # url = "https://relayer.meson.fi/api/v1/list"
         url = "https://relayer.meson.fi/api/v1/list"
-
         payload={}
         headers = {
           'Accept': 'application/json'
         }
-
         response = requests.request("GET", url, headers=headers, data=payload)
 
         print(response.text)
 
+    @allure.title("get_price")
     def test_get_price(self, data):
         # print("from为："+data['from_item'])
         data_dict = data['data']
-
-        # url = "https://relayer.meson.fi/api/v1/price"
         url = "https://relayer.meson.fi/api/v1/price"
 
         payload = json.dumps({
@@ -97,7 +89,9 @@ class api:
         except json.JSONDecodeError:
             print("Error: Failed to decode JSON response.")
 
+    @allure.title("encode_swap")
     def test_encode_swap(self, data):
+
         data_dict = data['data']
         # url = "https://relayer.meson.fi/api/v1/swap"
         url = "https://relayer.meson.fi/api/v1/swap"
@@ -121,6 +115,7 @@ class api:
         result = data['result']
         return result
 
+    @allure.title("submit swap signatures")
     def test_submit_swap_signatures(self, result, data):
 
         data_dict = data['data']
@@ -137,10 +132,6 @@ class api:
 
         keccak_hash0 = sha3.keccak_256(hash_bytes_0).digest()
         keccak_hash1 = sha3.keccak_256(hash_bytes_1).digest()
-
-        # 创建一个 Ethereum message 对象
-        # message_0 = messages.encode_defunct(keccak_hash0)
-        # message_1 = messages.encode_defunct(keccak_hash1)
 
         # 将 keccak256 哈希转换回十六进制字符串
         hash0 = keccak_hash0.hex()
@@ -160,8 +151,7 @@ class api:
 
         return sig0_serialized, sig1_serialized, result['encoded']
 
-
-
+    @allure.title("submit swap")
     def test_submit_swap(self, hash1, hash2, encoded, data):
         data_dict = data['data']
         # url = "https://relayer.meson.fi/api/v1/swap/:encoded"
@@ -183,12 +173,12 @@ class api:
 
         response = requests.request("POST", url, headers=headers, data=payload)
 
-        # print(response.text)
         data = response.json()
         swapId = data['result']['swapId']
         print(swapId)
         return swapId
 
+    @allure.title("check status")
     def test_check_status(self, swapId):
         # time.sleep(10)
         # url = "https://relayer.meson.fi/api/v1/swap/:swapId"
@@ -211,8 +201,6 @@ class api:
                 print(data["result"])
                 return data["result"]
 
-        # assert "EXECUTED" in data["result"]
-        # print(data['result'])
 
     # def test_change_chain(self, swapStatus, chain):
     #     time.sleep(5)
@@ -222,10 +210,10 @@ class api:
     #         # 交换 from 和 to 字段的值
     #         chain["from"], chain["to"] = chain["to"], chain["from"]
     #
-    #         # 如果 chain['from'] 的值为 "avax:usdc"，则修改 input.yaml 文件
+    #         # 如果 chain['from'] 的值为 "avax:usdc"，则修改 single.yaml 文件
     #         if chain["from"] == "avax:usdc":
-    #             # 将修改后的数据写回 input.yaml 文件
-    #             with open('input.yaml', 'w') as file:
+    #             # 将修改后的数据写回 single.yaml 文件
+    #             with open('single.yaml', 'w') as file:
     #                 yaml.dump(chain, file, default_style='"')
     #         else:
     #             # 如果 chain['from'] 的值不是 "avax:usdc"，则修改 from 和 to 字段的值为对应的值
@@ -243,48 +231,38 @@ class api:
 if __name__ == '__main__':
     import pytest
 
-
-
     count = 0  # 初始化计数器为 0
-
-    # while True:
-    #     Testapi = api()
-    #     data = Testapi.test_yaml_data()
-    #     print(data)
-    #     count += 1  # 每次执行测试用例后计数器加一
-    #     print(f"执行第 {count} 次测试用例")
-    #
-    #
-    #     Testapi.test_get_price(data)
-    #     time.sleep(3)
-    # pytest.main(['-vs', '-k', 'test_yaml_data'])
-    #
-    Testapi = api()
+    Testapi = TestApi()
     data = Testapi.test_yaml_data()
     num_pairs = min(len(Testapi.data['from']), len(Testapi.data['to']))
+
     while True:
         for _ in range(num_pairs):
-
             count += 1  # 每次执行测试用例后计数器加一
             print(f"执行第 {count} 次测试用例")
             data = Testapi.test_yaml_data()
+            Testapi.test_list_supported_chains
+            Testapi.test_get_price(data)
+            # with allure.step("Test Encode Swap"):
+            swapInfo = Testapi.test_encode_swap(data)
+            Testapi.test_submit_swap_signatures(swapInfo, data)
+            # with allure.step("Test Submit Swap Signatures"):
+            sig0, sig1, encoded = Testapi.test_submit_swap_signatures(swapInfo, data)
+            # with allure.step("Test Submit Swap"):
+            swapId = Testapi.test_submit_swap(sig0, sig1, encoded, data)
+            # with allure.step("Test Check Status"):
+            swapStatus = Testapi.test_check_status(swapId)
 
-            with allure.step("Test Get Price"):
-                Testapi.test_get_price(data)
-            with allure.step("Test Encode Swap"):
-                swapInfo = Testapi.test_encode_swap(data)
-                Testapi.test_submit_swap_signatures(swapInfo, data)
-            with allure.step("Test Submit Swap Signatures"):
-                sig0, sig1, encoded = Testapi.test_submit_swap_signatures(swapInfo, data)
-            with allure.step("Test Submit Swap"):
-                swapId = Testapi.test_submit_swap(sig0, sig1, encoded, data)
-            with allure.step("Test Check Status"):
-                swapStatus = Testapi.test_check_status(swapId)
-            # with allure.step("Test Change Chain"):
-            #     Testapi.test_change_chain(swapStatus, data)
-            # subprocess.run(['pytest', '-vs'])
+            # 添加一个检查，检查是否遍历了所有数据对
+            if count >= num_pairs:
+                break
+        break
 
-            time.sleep(30)
+    # pytest.main(['-vs', '-k', 'test_yaml_data', '--clean-alluredir', '--alluredir=./allure-results'])
+    # os.system(r"allure generate ./allure-results -o ./allure-report --clean")
+    # pytest.main(["-vs", "--alluredir=report"])
+    # time.sleep(2)
+    # os.system(r"allure generate ./result/ -o ./report/ --clean")
     # pytest.main(['-vs', '-k', 'test_yaml_data'])
     # count = 0  # 初始化计数器为 0
     # while True:
@@ -299,9 +277,19 @@ if __name__ == '__main__':
     #     swapId = Testapi.test_submit_swap(sig0, sig1, encoded, data)
     #     swapStatus = Testapi.test_check_status(swapId)
     #     Testapi.test_change_chain(swapStatus, data)
-
         # subprocess.run(['pytest', '-vs'])
-
+    # while True:
+    #     Testapi = api()
+    #     data = Testapi.test_yaml_data()
+    #     print(data)
+    #     count += 1  # 每次执行测试用例后计数器加一
+    #     print(f"执行第 {count} 次测试用例")
+    #
+    #
+    #     Testapi.test_get_price(data)
+    #     time.sleep(3)
+    # pytest.main(['-vs', '-k', 'test_yaml_data'])
+    #
         # time.sleep(120)
         # 创建 Api 类的实例
         # api_instance = api()
