@@ -2,8 +2,10 @@ pytest-html
 pytest-xdist
 pytest-ordering
 pytest-rerunfailures
-#allure-pytest
+allure-pytest
 pytest-base-url
 requests
 pytest
 pyyaml
+pysha3
+eth_account
