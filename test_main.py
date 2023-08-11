@@ -14,13 +14,15 @@ import os
 
 @allure.feature("test-mesonfi-api")
 class TestApi:
-    @allure.title("get swap data")
-    def test_yaml_data(self):
+    def __init__(self):
         self.data = None
         self.from_index = 0
         self.to_index = 1
+        self.last_executed_pair = None  # Initialize the attribute to None
+    @allure.title("get swap data")
+    def test_yaml_data(self):
         if self.data is None:
-            with open('single.yaml', 'r') as file:
+            with open('multiChain.yaml', 'r') as file:
                 self.data = yaml.load(file, Loader=yaml.SafeLoader)
         # 对于单个交易对的情况，根据当前索引返回相应的对
         if len(self.data['from']) == 1 and len(self.data['to']) == 1:
@@ -243,21 +245,19 @@ if __name__ == '__main__':
             data = Testapi.test_yaml_data()
             Testapi.test_list_supported_chains
             Testapi.test_get_price(data)
-            # with allure.step("Test Encode Swap"):
             swapInfo = Testapi.test_encode_swap(data)
             Testapi.test_submit_swap_signatures(swapInfo, data)
-            # with allure.step("Test Submit Swap Signatures"):
             sig0, sig1, encoded = Testapi.test_submit_swap_signatures(swapInfo, data)
-            # with allure.step("Test Submit Swap"):
             swapId = Testapi.test_submit_swap(sig0, sig1, encoded, data)
-            # with allure.step("Test Check Status"):
             swapStatus = Testapi.test_check_status(swapId)
 
             # 添加一个检查，检查是否遍历了所有数据对
-            if count >= num_pairs:
+            if count >= num_pairs-1:
                 break
         break
 
+    pytest.main(['-vs', '-k', 'test_yaml_data'])
+    # time.sleep(20)
     # pytest.main(['-vs', '-k', 'test_yaml_data', '--clean-alluredir', '--alluredir=./allure-results'])
     # os.system(r"allure generate ./allure-results -o ./allure-report --clean")
     # pytest.main(["-vs", "--alluredir=report"])
