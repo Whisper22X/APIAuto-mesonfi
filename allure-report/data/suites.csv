@@ -1,0 +1,8 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"broken","Fri Aug 11 16:29:43 CST 2023","Fri Aug 11 16:29:43 CST 2023","0","","test_main","TestApi","","","encode_swap",""
+"broken","Fri Aug 11 16:29:43 CST 2023","Fri Aug 11 16:29:43 CST 2023","0","","test_main","TestApi","","","check status",""
+"broken","Fri Aug 11 16:29:43 CST 2023","Fri Aug 11 16:29:43 CST 2023","0","","test_main","TestApi","","","submit swap",""
+"broken","Fri Aug 11 16:29:43 CST 2023","Fri Aug 11 16:29:43 CST 2023","0","","test_main","TestApi","","","get_price",""
+"broken","Fri Aug 11 16:29:41 CST 2023","Fri Aug 11 16:29:41 CST 2023","1","","test_main","TestApi","","","get swap data",""
+"broken","Fri Aug 11 16:29:43 CST 2023","Fri Aug 11 16:29:43 CST 2023","0","","test_main","TestApi","","","submit swap signatures",""
+"passed","Fri Aug 11 16:29:41 CST 2023","Fri Aug 11 16:29:43 CST 2023","1422","","test_main","TestApi","","","list supported chains",""

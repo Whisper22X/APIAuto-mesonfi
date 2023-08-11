@@ -1,5 +1,14 @@
 # APIAuto-mesonfi
 
+运行前，请在命令行中输入：
+```shell
+pip install -r requirements.txt
+```
+
+
+
+
+
 ## 单个交易对：single.yaml
 
 1. 在 `single.yaml` 文件中配置你所需的交易信息：
@@ -15,7 +24,7 @@
 
 
 
-# 多个交易对：multiChain.yaml
+## 多个交易对：multiChain.yaml
 
 在 `multiChain.yaml` 文件中配置你所需的交易信息：
 

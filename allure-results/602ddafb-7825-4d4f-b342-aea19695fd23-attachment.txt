@@ -1,0 +1,2 @@
+这是多个交易对
+eth:usdc bnb:usdc
