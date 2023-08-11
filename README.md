@@ -24,6 +24,12 @@
     1.2. 配置你的私钥（注意：请不要泄露，只限在本地运行）。
     1.3. 配置你的 `from` 和 `to` 的网络和币种（从 ETH 开始交易，请确保你的 ETH 里有足够的稳定币）。
 
+2. 在 `test_main.py` 文件中修改这行代码：
+   ```python
+   if self.data is None:
+       with open('multiChain.yaml', 'r') as file:
+   
+
 其他：
 
 如果需要无限循环，在 `test_main.py` 文件中注释以下代码段：
