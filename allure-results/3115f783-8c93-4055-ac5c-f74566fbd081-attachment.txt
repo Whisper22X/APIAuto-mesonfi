@@ -1,0 +1,2 @@
+bnb:usdc bnb:usdc
+这是单个交易对

@@ -28,4 +28,8 @@
 #  - "zkevm:usdc"
 
 #是否开启自动执行（Yes:开启，No：关闭）
-"repetition": "No"
+"repetition": "Yes"
+
+#正式/测试网
+# "main": "https://relayer.meson.fi/"
+"interface": "https://relayer.meson.fi/"
