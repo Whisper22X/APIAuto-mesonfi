@@ -11,7 +11,7 @@ import time
 import pytest
 import allure
 import os
-
+import urllib3
 
 # @classmethod
 # def setup_class(self):
@@ -125,7 +125,8 @@ def test_get_price(data):
         'Content-Type': 'application/json',
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.request("POST", url, headers=headers, data=payload, verify=False)
+    urllib3.disable_warnings()
 
     try:
         result = response.json()
@@ -152,7 +153,8 @@ def test_encode_swap(data):
         'Content-Type': 'application/json',
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.request("POST", url, headers=headers, data=payload, verify=False)
+    urllib3.disable_warnings()
     #print(response)
     data = response.json()
     # print(data)
@@ -163,8 +165,11 @@ def test_encode_swap(data):
 def result():
     result = test_encode_swap(data)
     return result
+
 @allure.title("submit swap signatures")
 def test_submit_swap_signatures(data, result):
+    # print(data)
+    # print(result)
     data_dict = data['data']
     private_key = data_dict['private-key']
     # 假设第一条哈希的十六进制字符串
@@ -202,9 +207,10 @@ def test_submit_swap_signatures(data, result):
 @allure.title("submit swap")
 def test_submit_swap(hash1, hash2, encoded, data):
     data_dict = data['data']
-
+    # print(encoded)
+    # print(data)
     # url = "https://relayer.meson.fi/api/v1/swap/:encoded"
-    url = data['data']['interface'] + encoded
+    url = data['data']['interface'] + "api/v1/swap/" + encoded
 
     payload = json.dumps({
         "fromAddress": data_dict['address-from'],
@@ -220,10 +226,12 @@ def test_submit_swap(hash1, hash2, encoded, data):
         'Accept': 'application/json'
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.request("POST", url, headers=headers, data=payload, verify=False)
+    urllib3.disable_warnings()
+    # print(response.text)
 
-    data = response.json()
-    swapId = data['result']['swapId']
+    d = response.json()
+    swapId = d['result']['swapId']
     print(swapId)
     return swapId
 
@@ -243,7 +251,8 @@ def test_check_status(swapId, data):
     }
 
     while True:
-        response = requests.request("GET", url, headers=headers, data=payload)
+        response = requests.request("GET", url, headers=headers, data=payload, verify=False)
+        urllib3.disable_warnings()
         data = response.json()
         # print(data)
         # 这里可以添加一些等待的逻辑，可以使用time.sleep()等方法
@@ -275,13 +284,14 @@ if __name__ == '__main__':
     stop = False  # 终止执行
     Testapi = initData()
     # data = Testapi.yaml_data()
+    # data = Testapi.yaml_data()
 
     # 在循环之前先执行一次获取价格的操作
     # test_get_price()
     while not stop:
         # for _ in range(num_pairs):
         # Testapi = TestApi()
-
+        #Testapi = initData()
         count += 1  # 每次执行测试用例后计数器加一
         print(f"执行第 {count} 次测试用例")
 
@@ -290,15 +300,15 @@ if __name__ == '__main__':
         test_list_supported_chains()
         test_get_price(data)
         print(f"num_pairs: {num_pairs}, repetition: {Testapi.data['repetition']}")
-        # swapInfo = test_encode_swap(data)
-        # test_submit_swap_signatures(swapInfo, data)
-        # sig0, sig1, encoded = test_submit_swap_signatures(swapInfo, data)
-        # swapId = test_submit_swap(sig0, sig1, encoded, data)
-        # swapStatus = test_check_status(swapId)
+        swapInfo = test_encode_swap(data)
+        test_submit_swap_signatures(data, swapInfo)
+        sig0, sig1, encoded = test_submit_swap_signatures(data, swapInfo)
+        swapId = test_submit_swap(sig0, sig1, encoded, data)
+        swapStatus = test_check_status(swapId, data)
         # 更新索引以获取下一对
         if count >= num_pairs and Testapi.data['repetition'] == "No":
             stop = True
             break
-
+    # time.sleep(20)
     # if stop:
     #     break

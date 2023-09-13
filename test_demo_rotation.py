@@ -256,11 +256,11 @@ if __name__ == '__main__':
         num_pairs = min(len(Testapi.data['from']), len(Testapi.data['to']))
         Testapi.test_list_supported_chains()
         Testapi.test_get_price(data)
-        # swapInfo = Testapi.test_encode_swap(data)
-        # Testapi.test_submit_swap_signatures(swapInfo, data)
-        # sig0, sig1, encoded = Testapi.test_submit_swap_signatures(swapInfo, data)
-        # swapId = Testapi.test_submit_swap(sig0, sig1, encoded, data)
-        # swapStatus = Testapi.test_check_status(swapId)
+        swapInfo = Testapi.test_encode_swap(data)
+        Testapi.test_submit_swap_signatures(swapInfo, data)
+        sig0, sig1, encoded = Testapi.test_submit_swap_signatures(swapInfo, data)
+        swapId = Testapi.test_submit_swap(sig0, sig1, encoded, data)
+        swapStatus = Testapi.test_check_status(swapId)
 
         # 添加一个检查，检查是否遍历了所有数据对
         if count >= num_pairs - 1 and Testapi.data['repetition'] == "No":
